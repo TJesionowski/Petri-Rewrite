@@ -31,11 +31,11 @@ class Cell:
             self.mass += (self.calc_light() / 100) * self.mass # Plant cells gain a certain amount of mass per update cycle, depending on distance from the light source
             self.radius = math.sqrt(self.mass/math.pi) * 2 # Set radius for use in rendering and interacting with other cells and world
         else:
-            self.radius = math.sqrt(self.mass/math.pi) * 3 # Non-plant cells have greater radii
+            self.radius = math.sqrt(self.mass/math.pi) * 3 # Non-plant cells have greater radii per mass
             self.move(self.target(cell_list))
 
 
-        # Suffocation
+        # Suffocation and consumption
         for other in cell_list: # loop through the list of other cells
             if self.dist(other.position) < (other.radius) and other.id != self.id and other.radius > self.radius: # if the cell is touching this cell and is not this cell, then this cell suffocates
                 if other.attrib["species"] != "plant":
