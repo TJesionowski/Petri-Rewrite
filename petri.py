@@ -61,7 +61,7 @@ while True:
     update_field(entity_list)
     for entity in entity_list:
         entity.update(entity_list)
-        if not entity.living:
+        if not entity.living or entity.position[0] > FIELD_SIZE or entity.position[1] > FIELD_SIZE or entity.position[0] < 0 or entity.position[1] < 0:  # If entity is dead or outside of bounds, remove it
             for count in range(entity.index, len(entity_list)):  # If you remove a cell from the middle of the index, you need to tell the cells after the one you removed that their index has decreased by one
                 entity_list[count].index -= 1
             entity_list.remove(entity)
