@@ -15,7 +15,7 @@ class Cell:
         self.mass = mass
         self.radius = math.sqrt(self.mass / math.pi) * 5  # Set radius for use in rendering and interacting with other cells and world
         self.living = True
-        self.id = random.randint(0, 99999999)
+        self.identification_number = random.randint(0, 99999999)
 
     def split(self, cell_list, angle):
         """Creates a new cell of the same type with a portion of the parent cell's mass"""
@@ -55,7 +55,7 @@ class Plant(Cell):
         self.radius = math.sqrt(self.mass / math.pi) * 2   # Set radius for use in rendering and interacting with other cells and world
 
         for other in cell_list:  # loop through the list of other cells
-            if self.dist(other.position) < (other.radius) and other.id != self.id and other.radius > self.radius:  # if the cell is touching this cell and is not this cell, then this cell suffocates
+            if self.dist(other.position) < (other.radius) and other.identification_number != self.identification_number and other.radius > self.radius:  # if the cell is touching this cell and is not this cell, then this cell suffocates
                 if not other.attrib["species"] == "plant":
                     other.mass += self.mass
                 self.living = False
@@ -84,7 +84,7 @@ class Consumer(Cell):
 
     def __init__(self, index, position, mass, splitMass=200):
         super().__init__(index, position, mass, "herbivore")
-        self.target_cell = {"index": -1, "id": 0}
+        self.target_cell = {"index": -1, "identification_number": 0}
 
     def update(self, cell_list):
         """Update the position, mass, and actions of the cell"""
@@ -92,14 +92,14 @@ class Consumer(Cell):
         self.radius = math.sqrt(self.mass / math.pi) * 3   # Non-plant cells have greater radii per mass
 
         # If current target is alive, track it, otherwise find new target to track
-        if self.target_cell["index"] >= 0 and self.target_cell["index"] < len(cell_list) and self.target_cell["id"] == cell_list[self.target_cell["index"]].id:  # Make sure that the target from the previous cycle is still alive, and if not, find new target
+        if self.target_cell["index"] >= 0 and self.target_cell["index"] < len(cell_list) and self.target_cell["identification_number"] == cell_list[self.target_cell["index"]].identification_number:  # Make sure that the target from the previous cycle is still alive, and if not, find new target
             self.move(self.target_direction(cell_list))
         else:
             self.new_target(cell_list)
 
         # Suffocation and consumption
         for other in cell_list:  # loop through the list of other cells
-            if self.dist(other.position) < (other.radius) and other.id != self.id and other.radius > self.radius:  # if the cell is touching this cell and is not this cell, then this cell suffocates
+            if self.dist(other.position) < (other.radius) and other.identification_number != self.identification_number and other.radius > self.radius:  # if the cell is touching this cell and is not this cell, then this cell suffocates
                 self.living = False
                 break
 
@@ -113,8 +113,8 @@ class Consumer(Cell):
 
         distance_to_target = 9999
         for cell in cell_list:  # Search for most desirable target, and save it's index and id
-            if cell.mass < self.mass and (cell.attrib["species"] == "plant") and self.dist(cell.position) < distance_to_target and not cell.id == self.id:
-                self.target_cell = {"index": cell.index, "id": cell.id}
+            if cell.mass < self.mass and (cell.attrib["species"] == "plant") and self.dist(cell.position) < distance_to_target and not cell.identification_number == self.identification_number:
+                self.target_cell = {"index": cell.index, "identification_number": cell.identification_number}
                 distance_to_target = self.dist(cell_list[self.target_cell["index"]].position)
 
     def target_direction(self, cell_list):  # Chooses target based on species of cell
