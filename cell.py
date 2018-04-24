@@ -90,7 +90,12 @@ class Consumer(Cell):
         """Update the position, mass, and actions of the cell"""
         self.mass -= self.mass * 0.001 * self.attrib["metabolism"]  # Cells lose one thousandth of their mass per tick
         self.radius = math.sqrt(self.mass / math.pi) * 3   # Non-plant cells have greater radii per mass
-        self.move(self.target(cell_list))
+
+        # If current target is alive, track it, otherwise find new target to track
+        if self.target_cell["index"] >= 0 and self.target_cell["index"] < len(cell_list) and self.target_cell["id"] == cell_list[self.target_cell["index"]].id:  # Make sure that the target from the previous cycle is still alive, and if not, find new target
+            self.move(self.target_direction(cell_list))
+        else:
+            self.new_target(cell_list)
 
         # Suffocation and consumption
         for other in cell_list:  # loop through the list of other cells
@@ -101,28 +106,28 @@ class Consumer(Cell):
         if self.mass < self.attrib["split_mass"] / 5:  # Check if cell should still be alive
             self.living = False
         elif self.mass > self.attrib["split_mass"]:  # Check if cell should split
-            self.split(cell_list, self.target(cell_list))
+            self.split(cell_list, self.target_direction(cell_list))
 
-    def target(self, cell_list):  # Chooses target based on species of cell, returns angle in radians pointing towards chosen target
+    def new_target(self, cell_list):
+        """Find new cell to chase and attempt to consume"""
+
+        distance_to_target = 9999
+        for cell in cell_list:  # Search for most desirable target, and save it's index and id
+            if cell.mass < self.mass and (cell.attrib["species"] == "plant") and self.dist(cell.position) < distance_to_target and not cell.id == self.id:
+                self.target_cell = {"index": cell.index, "id": cell.id}
+                distance_to_target = self.dist(cell_list[self.target_cell["index"]].position)
+
+    def target_direction(self, cell_list):  # Chooses target based on species of cell
         """ Movement, for cells which are capable of it, uses the following decision procedure:
                 Cells check the general attractiveness of areas of the field, with a higher concentration of food making it appear better, and a higher concentration of predators making it appear worse
                 Once it is within what appears to be a good area, it will "see" a target that it should move toward to consume, only ceasing its pursuit if the target is first reached by another cell or a predator nears it and makes it attempt to flee
         """
-        direction = 0
-        if self.target_cell["index"] >= 0 and self.target_cell["index"] < len(cell_list) and self.target_cell["id"] == cell_list[self.target_cell["index"]].id:  # Make sure that the target from the previous cycle is still alive, and if not, find new target
-            direction = math.atan2(
-                (cell_list[self.target_cell["index"]].position[1] - self.position[1]),  # Theta = atan2(y, x)
-                (cell_list[self.target_cell["index"]].position[0] - self.position[0]))  # Broken into multiplle lines for clarity
-        else:
-            distance_to_target = 9999
-            for cell in cell_list:  # Search for most desirable target, and save it's index and id
-                if cell.mass < self.mass and (cell.attrib["species"] == "plant") and self.dist(cell.position) < distance_to_target and not cell.id == self.id:
-                    self.target_cell = {"index": cell.index, "id": cell.id}
-                    direction = math.atan2(
-                        (cell_list[self.target_cell["index"]].position[1] - self.position[1]),  # Theta = atan2(y, x)
-                        (cell_list[self.target_cell["index"]].position[0] - self.position[0]))  # Broken into multiplle lines for clarity
-                    distance_to_target = self.dist(cell_list[self.target_cell["index"]].position)
+        direction = math.atan2(
+            (cell_list[self.target_cell["index"]].position[1] - self.position[1]),  # Theta = atan2(y, x)
+            (cell_list[self.target_cell["index"]].position[0] - self.position[0]))  # Broken into multiplle lines for clarity
         return direction
+
+        return self.target_direction(cell_list)
 
     def move(self, angle=0, speed=(lambda x: (1 / (math.sqrt(x) / 20)))):  # Moves the cell (Note: angle is in radians), speed is function for determining the rate at which movement slows to when mass increases
         """ If cell is herbivore, moves towards and consumes plantlike cell, if cell is omnivore, targets nearest and biggest consumable cell of any species
