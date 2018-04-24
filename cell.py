@@ -56,7 +56,7 @@ class Plant(Cell):
 
         for other in cell_list:  # loop through the list of other cells
             if self.dist(other.position) < (other.radius) and other.id != self.id and other.radius > self.radius:  # if the cell is touching this cell and is not this cell, then this cell suffocates
-                if other.attrib["cell_type"] != "plant":
+                if not other.attrib["species"] == "plant":
                     other.mass += self.mass
                 self.living = False
                 break
