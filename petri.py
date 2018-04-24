@@ -1,6 +1,7 @@
 import tkinter
 import random
-from cell import Cell
+from cell import Plant
+from cell import Consumer
 
 # Global constants
 FIELD_SIZE = 1200
@@ -15,15 +16,15 @@ FIELD.pack()
 entity_list = []
 
 # Example cases for testing
-entity_list.append(Cell(len(entity_list), [200, 200], 80))
+entity_list.append(Plant(len(entity_list), [200, 200], 80))
 
-entity_list.append(Cell(len(entity_list), [random.randint(0, 1200), random.randint(0, 1200)], 80))
-entity_list.append(Cell(len(entity_list), [random.randint(0, 1200), random.randint(0, 1200)], 80))
-entity_list.append(Cell(len(entity_list), [random.randint(0, 1200), random.randint(0, 1200)], 80))
-entity_list.append(Cell(len(entity_list), [random.randint(0, 1200), random.randint(0, 1200)], 80))
+entity_list.append(Plant(len(entity_list), [random.randint(0, 1200), random.randint(0, 1200)], 80))
+entity_list.append(Plant(len(entity_list), [random.randint(0, 1200), random.randint(0, 1200)], 80))
+entity_list.append(Plant(len(entity_list), [random.randint(0, 1200), random.randint(0, 1200)], 80))
+entity_list.append(Plant(len(entity_list), [random.randint(0, 1200), random.randint(0, 1200)], 80))
 
-entity_list.append(Cell(len(entity_list), [random.randint(0, 1200), random.randint(0, 1200)], 1000, "herbivore", 250))
-entity_list.append(Cell(len(entity_list), [random.randint(0, 1200), random.randint(0, 1200)], 1000, "herbivore", 250))
+entity_list.append(Consumer(len(entity_list), [random.randint(0, 1200), random.randint(0, 1200)], 1000, 250))
+entity_list.append(Consumer(len(entity_list), [random.randint(0, 1200), random.randint(0, 1200)], 1000, 250))
 
 
 # Update canvas
