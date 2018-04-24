@@ -1,5 +1,6 @@
 import tkinter
 import random
+from cell import Cell
 from cell import Plant
 from cell import Consumer
 
@@ -13,18 +14,23 @@ FIELD = tkinter.Canvas(CANVAS, height=FIELD_SIZE, width=FIELD_SIZE)
 FIELD.pack()
 
 # Instantiate list of cells
-entity_list = []
+plant_list = []
+consumer_list = []
+Cell.FIELD_SIZE = FIELD_SIZE
+Plant.CELL_LIST = plant_list
+Consumer.CELL_LIST = consumer_list
+Consumer.TARGET_LIST = plant_list
 
 # Example cases for testing
-entity_list.append(Plant(len(entity_list), [200, 200], 80))
+plant_list.append(Plant(len(plant_list), [200, 200], 80))
 
-entity_list.append(Plant(len(entity_list), [random.randint(0, 1200), random.randint(0, 1200)], 80))
-entity_list.append(Plant(len(entity_list), [random.randint(0, 1200), random.randint(0, 1200)], 80))
-entity_list.append(Plant(len(entity_list), [random.randint(0, 1200), random.randint(0, 1200)], 80))
-entity_list.append(Plant(len(entity_list), [random.randint(0, 1200), random.randint(0, 1200)], 80))
+plant_list.append(Plant(len(plant_list), [random.randint(0, 1200), random.randint(0, 1200)], 80))
+plant_list.append(Plant(len(plant_list), [random.randint(0, 1200), random.randint(0, 1200)], 80))
+plant_list.append(Plant(len(plant_list), [random.randint(0, 1200), random.randint(0, 1200)], 80))
+plant_list.append(Plant(len(plant_list), [random.randint(0, 1200), random.randint(0, 1200)], 80))
 
-entity_list.append(Consumer(len(entity_list), [random.randint(0, 1200), random.randint(0, 1200)], 1000, 250))
-entity_list.append(Consumer(len(entity_list), [random.randint(0, 1200), random.randint(0, 1200)], 1000, 250))
+consumer_list.append(Consumer(len(consumer_list), [random.randint(0, 1200), random.randint(0, 1200)], 1000, 250))
+consumer_list.append(Consumer(len(consumer_list), [random.randint(0, 1200), random.randint(0, 1200)], 1000, 250))
 
 
 # Update canvas
@@ -58,10 +64,17 @@ def update_field(cell_list):
 
 
 while True:
-    update_field(entity_list)
-    for entity in entity_list:
-        entity.update(entity_list)
+    update_field(plant_list + consumer_list)
+    for entity in plant_list:
+        entity.update()
         if not entity.living or entity.position[0] > FIELD_SIZE or entity.position[1] > FIELD_SIZE or entity.position[0] < 0 or entity.position[1] < 0:  # If entity is dead or outside of bounds, remove it
-            for count in range(entity.index, len(entity_list)):  # If you remove a cell from the middle of the index, you need to tell the cells after the one you removed that their index has decreased by one
-                entity_list[count].index -= 1
-            entity_list.remove(entity)
+            for count in range(entity.index, len(plant_list)):  # If you remove a cell from the middle of the index, you need to tell the cells after the one you removed that their index has decreased by one
+                plant_list[count].index -= 1
+            plant_list.remove(entity)
+
+    for entity in consumer_list:
+        entity.update()
+        if not entity.living or entity.position[0] > FIELD_SIZE or entity.position[1] > FIELD_SIZE or entity.position[0] < 0 or entity.position[1] < 0:  # If entity is dead or outside of bounds, remove it
+            for count in range(entity.index, len(consumer_list)):  # If you remove a cell from the middle of the index, you need to tell the cells after the one you removed that their index has decreased by one
+                consumer_list[count].index -= 1
+            consumer_list.remove(entity)
