@@ -55,7 +55,10 @@ class Plant(Cell):
         self.radius = math.sqrt(self.mass / math.pi) * 2   # Set radius for use in rendering and interacting with other cells and world
 
         for other in cell_list:  # loop through the list of other cells
-            if self.dist(other.position) < (other.radius) and other.identification_number != self.identification_number and other.radius > self.radius:  # if the cell is touching this cell and is not this cell, then this cell suffocates
+            # if the cell is touching this cell and is not this cell, then this cell suffocates
+            if self.dist(other.position) < (other.radius)
+            and other.identification_number != self.identification_number
+            and other.radius > self.radius:  
                 if not other.attrib["species"] == "plant":
                     other.mass += self.mass
                 self.living = False
