@@ -142,7 +142,7 @@ class Consumer(Cell):
     def new_target(self):
         """Find new cell to chase and attempt to consume"""
 
-        distance_to_target = 
+        distance_to_target = Cell.FIELD_SIZE * Cell.FIELD_SIZE
         for cell in Consumer.TARGET_LIST: # Search for most desirable target, and save it's index and id
             if cell.mass < self.mass \
                and (cell.attrib["species"] == "plant") \
