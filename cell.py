@@ -57,9 +57,9 @@ class Plant(Cell):
         for other in Plant.CELL_LIST:
             # loop through the list of other cells to check which will suffocate
             if (self.dist(other.position) - (self.radius)) < other.radius / -10  \
-               and other.radius < self.radius:
+               and other.radius > self.radius:
                 # if this cell overlaps another cell of the same type significantly, that cell dies, as if by "suffocation"
-                other.living = False
+                self.living = False
 
         if self.mass < self.attrib["split_mass"] / 5:  # Check if cell should still be alive
             self.living = False
