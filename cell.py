@@ -68,14 +68,21 @@ class Plant(Cell):
 
     def split(self, angle):
         """Creates a new cell of the same type with a portion of the parent cell's mass"""
-        new_position = [(self.position[0] + (math.cos(math.radians(angle)) * (self.radius * 4))), (self.position[1] + (math.sin(math.radians(angle)) * (self.radius * 4)))]
-        Plant.CELL_LIST.append(Plant(len(Plant.CELL_LIST), new_position, self.mass / 3, self.attrib["split_mass"]))
+        new_position = [(self.position[0] + (math.cos(math.radians(angle)) * (self.radius * 4))),
+                        (self.position[1] + (math.sin(math.radians(angle)) * (self.radius * 4)))]
+        Plant.CELL_LIST.append(Plant(len(Plant.CELL_LIST),
+                                     new_position,
+                                     self.mass / 3,
+                                     self.attrib["split_mass"]))
         self.mass /= 2
 
-    def calc_light(self, dispersion_function=(lambda x: (1 / (1 + x / 200)))):  # Calculate the amount of light reaching cell; by default the light loses 50% of its strength per 100 pixels
+    def calc_light(self, dispersion_function=(lambda x: (1 / (1 + x / 200)))):
+        # Calculate the amount of light reaching cell; by default the light loses 50% of its strength per 100 pixels
         """ Calculate amount of light reaching herbivorous cell"""
-        distance = self.dist([Cell.FIELD_SIZE / 2, Cell.FIELD_SIZE / 2])
-        return dispersion_function(distance)  # Light energy falls off with distance, rate depends on function
+        distance = self.dist([Cell.FIELD_SIZE / 2,
+                              Cell.FIELD_SIZE / 2])
+        # Light energy falls off with distance, rate depends on function
+        return dispersion_function(distance)  
 
 
 class Consumer(Cell):
@@ -96,32 +103,46 @@ class Consumer(Cell):
         self.radius = math.sqrt(self.mass / math.pi) * 3   # Non-plant cells have greater radii per mass
 
         # If current target is alive, track it, otherwise find new target to track
-        if self.target_cell["index"] >= 0 and self.target_cell["index"] < len(Consumer.TARGET_LIST) and self.target_cell["identification_number"] == Consumer.TARGET_LIST[self.target_cell["index"]].identification_number and Consumer.TARGET_LIST[self.target_cell["index"]].living:  # Make sure that the target from the previous cycle is still alive, and if not, find new target
+        if self.target_cell["index"] >= 0 \
+           and self.target_cell["index"] < len(Consumer.TARGET_LIST) \
+           and self.target_cell["identification_number"] == Consumer.TARGET_LIST[self.target_cell["index"]].identification_number \
+           and Consumer.TARGET_LIST[self.target_cell["index"]].living:
+            # Make sure that the target from the previous cycle is still alive, and if not,
+            # find new target
             self.move(self.target_direction())
         else:
             self.new_target()
 
         # Suffocation and consumption
-        for other in Consumer.CELL_LIST:  # loop through the list of other cells to check which will suffocate
-            if (self.dist(other.position) - (self.radius)) < other.radius / -10 and other.radius < self.radius:  # if this cell overlaps another cell of the same type significantly, that cell dies, as if by "suffocation"
+        for other in Consumer.CELL_LIST:
+            # loop through the list of other cells to check which will suffocate
+            if (self.dist(other.position) - (self.radius)) < other.radius / -10 \
+               and other.radius < self.radius:
+                # if this cell overlaps another cell of the same type significantly, that cell dies, as if by "suffocation"
                 other.living = False
 
-        for other in Consumer.TARGET_LIST:  # loop through the list of other cells to check which can be consumed
-            if self.dist(other.position) < (self.radius) and other.radius < self.radius:  # if this cell is touching the center of another consumable cell, that cell gets eaten
+        for other in Consumer.TARGET_LIST:
+            # loop through the list of other cells to check which can be consumed
+            if self.dist(other.position) < (self.radius) \
+               and other.radius < self.radius:
+                # if this cell is touching the center of another consumable cell, that cell gets eaten
                 self.mass += other.mass
                 other.living = False
 
-        if self.mass < self.attrib["split_mass"] / 5:  # Check if cell should still be alive
+        if self.mass < self.attrib["split_mass"] / 5: # Check if cell should still be alive
             self.living = False
-        elif self.mass > self.attrib["split_mass"]:  # Check if cell should split
+        elif self.mass > self.attrib["split_mass"]: # Check if cell should split
             self.split(self.target_direction())
 
     def new_target(self):
         """Find new cell to chase and attempt to consume"""
 
-        distance_to_target = 9999
-        for cell in Consumer.TARGET_LIST:  # Search for most desirable target, and save it's index and id
-            if cell.mass < self.mass and (cell.attrib["species"] == "plant") and self.dist(cell.position) < distance_to_target and not cell.identification_number == self.identification_number:
+        distance_to_target = 
+        for cell in Consumer.TARGET_LIST: # Search for most desirable target, and save it's index and id
+            if cell.mass < self.mass \
+               and (cell.attrib["species"] == "plant") \
+               and self.dist(cell.position) < distance_to_target \
+               and not cell.identification_number == self.identification_number:
                 self.target_cell = {"index": cell.index, "identification_number": cell.identification_number}
                 distance_to_target = self.dist(Consumer.TARGET_LIST[self.target_cell["index"]].position)
 
@@ -140,10 +161,15 @@ class Consumer(Cell):
     def move(self, angle=0, speed=(lambda x: (1 / (math.sqrt(x) / 20)))):  # Moves the cell (Note: angle is in radians), speed is function for determining the rate at which movement slows to when mass increases
         """ If cell is herbivore, moves towards and consumes plantlike cell, if cell is omnivore, targets nearest and biggest consumable cell of any species
         """
-        self.position = [(self.position[0] + (math.cos(angle) * speed(self.mass) * self.attrib["metabolism"])), (self.position[1] + (math.sin(angle) * speed(self.mass) * self.attrib["metabolism"]))]  # Once direction of movement is decided, moves cell in that direction, with speed dependent on metabolic rate and mass
+        self.position = [(self.position[0] + (math.cos(angle) * speed(self.mass) * self.attrib["metabolism"])),
+                         (self.position[1] + (math.sin(angle) * speed(self.mass) * self.attrib["metabolism"]))]  # Once direction of movement is decided, moves cell in that direction, with speed dependent on metabolic rate and mass
 
     def split(self, angle):
         """Creates a new cell of the same type with a portion of the parent cell's mass"""
-        new_position = [(self.position[0] + (math.cos(math.radians(angle)) * (self.radius * 2))), (self.position[1] + (math.sin(math.radians(angle)) * (self.radius * 2)))]
-        Consumer.CELL_LIST.append(Consumer(len(Consumer.CELL_LIST), new_position, self.mass / 3, self.attrib["split_mass"]))
+        new_position = [(self.position[0] + (math.cos(math.radians(angle)) * (self.radius * 2))),
+                        (self.position[1] + (math.sin(math.radians(angle)) * (self.radius * 2)))]
+        Consumer.CELL_LIST.append(Consumer(len(Consumer.CELL_LIST),
+                                           new_position,
+                                           self.mass / 3,
+                                           self.attrib["split_mass"]))
         self.mass /= 2
