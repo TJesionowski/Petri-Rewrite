@@ -50,6 +50,11 @@ class Plant(Cell):
 
     def update(self):
         """Update the position, mass, and actions of the cell"""
+
+        # If the cell is currently dead, do not update
+        if not self.living:
+            return
+
         self.mass -= self.mass * 0.001 * self.attrib["metabolism"]  # Cells lose one thousandth of their mass per tick
         self.mass += (self.calc_light() / 100) * self.mass   # Plant cells gain a certain amount of mass per update cycle, depending on distance from the light source
         self.radius = math.sqrt(self.mass / math.pi) * 2   # Set radius for use in rendering and interacting with other cells and world
