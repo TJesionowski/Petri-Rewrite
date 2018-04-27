@@ -123,6 +123,7 @@ class Consumer(Cell):
             self.move(self.target_direction())
         else:
             self.new_target()
+            self.move(self.target_direction())
 
         # Suffocation and consumption
         for other in Consumer.CELL_LIST:
@@ -169,7 +170,7 @@ class Consumer(Cell):
 
         return self.target_direction(Consumer.TARGET_LIST)
 
-    def move(self, angle=0, speed=(lambda x: (1 / (math.sqrt(x) / 20)))):  # Moves the cell (Note: angle is in radians), speed is function for determining the rate at which movement slows to when mass increases
+    def move(self, angle=0, speed=(lambda x: (10 / (math.log(x))))):  # Moves the cell (Note: angle is in radians), speed is function for determining the rate at which movement slows to when mass increases
         """ If cell is herbivore, moves towards and consumes plantlike cell, if cell is omnivore, targets nearest and biggest consumable cell of any species
         """
         self.position = [(self.position[0] + (math.cos(angle) * speed(self.mass) * self.attrib["metabolism"])),
