@@ -75,10 +75,16 @@ class Plant(Cell):
         """Creates a new cell of the same type with a portion of the parent cell's mass"""
         new_position = [(self.position[0] + (math.cos(math.radians(angle)) * (self.radius * 4))),
                         (self.position[1] + (math.sin(math.radians(angle)) * (self.radius * 4)))]
-        Plant.CELL_LIST.append(Plant(len(Plant.CELL_LIST),
-                                     new_position,
-                                     self.mass / 3,
-                                     self.attrib["split_mass"]))
+        if random.randint(1, 10) == 1:
+            Plant.CELL_LIST.append(Plant(len(Plant.CELL_LIST),
+                                         new_position,
+                                         self.mass / 3,
+                                         self.attrib["split_mass"]))
+        else:
+            Spore(new_position,
+                        self.mass / 3,
+                        "Plant",
+                        self.attrib["split_mass"])
         self.mass /= 2
 
     def calc_light(self, dispersion_function=(lambda x: (1 / (1 + x / 200)))):
@@ -178,3 +184,38 @@ class Consumer(Cell):
                                            self.mass / 3,
                                            self.attrib["split_mass"]))
         self.mass /= 2
+
+class Spore(Cell):
+    """Spores cells, these are invisible to other cells 
+    and will spawn cells after a random time interval."""
+
+    CELL_LIST = [] # List of Plant spores
+    
+    def __init__(self, position, mass, species, splitMass=200):
+        self.position = position
+        self.mass = mass
+        self.species = species
+        self.split_mass = splitMass
+        self.incubation_timer = random.randint(10, 10)
+        self.radius = math.sqrt(self.mass / math.pi)
+
+    def update(self):
+        self.incubation_timer = self.incubation_timer - 1
+        if self.incubation_timer < 1:
+            self.germinate()
+
+    def germinate(self):
+        if self.species == "Plant":
+            Plant.CELL_LIST.append(Plant(len(Cell.CELL_LIST),
+                                         self.position,
+                                         self.mass,
+                                         self.split_mass))
+        elif self.species == "Consumer":
+            Consumer.CELL_LIST.append(Consumer(len(Cell.CELL_LIST),
+                                               self.position,
+                                               self.mass,
+                                               self.split_mass))
+        else:
+            error("invalid cell type")
+        Spore.CELL_LIST.remove(self)
+        

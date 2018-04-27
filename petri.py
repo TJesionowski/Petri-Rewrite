@@ -3,6 +3,7 @@ import random
 from cell import Cell
 from cell import Plant
 from cell import Consumer
+from cell import Spore
 
 # Global constants
 FIELD_SIZE = 1200
@@ -16,10 +17,12 @@ FIELD.pack()
 # Instantiate list of cells
 plant_list = []
 consumer_list = []
+spore_list = []
 Cell.FIELD_SIZE = FIELD_SIZE
 Plant.CELL_LIST = plant_list
 Consumer.CELL_LIST = consumer_list
 Consumer.TARGET_LIST = plant_list
+Spore.CELL_LIST = spore_list
 
 # Example cases for testing
 plant_list.append(Plant(len(plant_list), [200, 200], 80))
@@ -64,7 +67,7 @@ def update_field(cell_list):
 
 
 while True:
-    update_field(plant_list + consumer_list)
+    update_field(plant_list + consumer_list + spore_list)
     for entity in plant_list:
         entity.update()
         if not entity.living or entity.position[0] > FIELD_SIZE or entity.position[1] > FIELD_SIZE or entity.position[0] < 0 or entity.position[1] < 0:  # If entity is dead or outside of bounds, remove it
@@ -78,3 +81,7 @@ while True:
             for count in range(entity.index, len(consumer_list)):  # If you remove a cell from the middle of the index, you need to tell the cells after the one you removed that their index has decreased by one
                 consumer_list[count].index -= 1
             consumer_list.remove(entity)
+
+    for entity in spore_list:
+        entity.update()
+        # spores need no additional code
