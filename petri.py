@@ -6,7 +6,7 @@ from cell import Consumer
 from cell import Spore
 
 # Global constants
-FIELD_SIZE = 1200
+FIELD_SIZE = 1000
 LIGHT_RADIUS = 200
 Cell.FIELD_SIZE = FIELD_SIZE
 
@@ -14,6 +14,7 @@ Cell.FIELD_SIZE = FIELD_SIZE
 # Instantiate canvas
 CANVAS = tkinter.Tk()
 FIELD = tkinter.Canvas(CANVAS, height=FIELD_SIZE, width=FIELD_SIZE)
+FIELD.config(background="white")
 FIELD.pack()
 
 # Instantiate list of cells
@@ -29,13 +30,14 @@ Spore.CELL_LIST = spore_list
 # Example cases for testing
 Plant([200, 200], 80)
 
-Plant([random.randint(0, 1200), random.randint(0, 1200)], 80)
-Plant([random.randint(0, 1200), random.randint(0, 1200)], 80)
-Plant([random.randint(0, 1200), random.randint(0, 1200)], 80)
-Plant([random.randint(0, 1200), random.randint(0, 1200)], 80)
+Plant([random.randint(0, FIELD_SIZE), random.randint(0, FIELD_SIZE)], 80)
+Plant([random.randint(0, FIELD_SIZE), random.randint(0, FIELD_SIZE)], 80)
+Plant([random.randint(0, FIELD_SIZE), random.randint(0, FIELD_SIZE)], 80)
+Plant([random.randint(0, FIELD_SIZE), random.randint(0, FIELD_SIZE)], 80)
 
-Consumer([random.randint(0, 1200), random.randint(0, 1200)], 200)
-Consumer([random.randint(0, 1200), random.randint(0, 1200)], 200)
+Consumer([random.randint(0, FIELD_SIZE), random.randint(0, FIELD_SIZE)], 200)
+Consumer([random.randint(0, FIELD_SIZE), random.randint(0, FIELD_SIZE)], 200)
+
 
 # Update canvas
 def update_field(cell_list):
@@ -61,16 +63,21 @@ def update_field(cell_list):
 
     CANVAS.update()
 
+
 def update_list(entity_list):
     """Update every entity in a list"""
     for entity in entity_list:
         entity.update()
-            
+
+
 def global_update():
     update_field(plant_list + consumer_list + spore_list)
 
     update_list(plant_list)
     update_list(consumer_list)
     update_list(spore_list)
+
+
+# Update until simulation is killed
 while True:
     global_update()
