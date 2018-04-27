@@ -8,6 +8,8 @@ from cell import Spore
 # Global constants
 FIELD_SIZE = 1200
 LIGHT_RADIUS = 200
+Cell.FIELD_SIZE = FIELD_SIZE
+
 
 # Instantiate canvas
 CANVAS = tkinter.Tk()
@@ -25,16 +27,15 @@ Consumer.TARGET_LIST = plant_list
 Spore.CELL_LIST = spore_list
 
 # Example cases for testing
-plant_list.append(Plant(len(plant_list), [200, 200], 80))
+Plant([200, 200], 80)
 
-plant_list.append(Plant(len(plant_list), [random.randint(0, 1200), random.randint(0, 1200)], 80))
-plant_list.append(Plant(len(plant_list), [random.randint(0, 1200), random.randint(0, 1200)], 80))
-plant_list.append(Plant(len(plant_list), [random.randint(0, 1200), random.randint(0, 1200)], 80))
-plant_list.append(Plant(len(plant_list), [random.randint(0, 1200), random.randint(0, 1200)], 80))
+Plant([random.randint(0, 1200), random.randint(0, 1200)], 80)
+Plant([random.randint(0, 1200), random.randint(0, 1200)], 80)
+Plant([random.randint(0, 1200), random.randint(0, 1200)], 80)
+Plant([random.randint(0, 1200), random.randint(0, 1200)], 80)
 
-consumer_list.append(Consumer(len(consumer_list), [random.randint(0, 1200), random.randint(0, 1200)], 1000, 250))
-consumer_list.append(Consumer(len(consumer_list), [random.randint(0, 1200), random.randint(0, 1200)], 1000, 250))
-
+Consumer([random.randint(0, 1200), random.randint(0, 1200)], 200)
+Consumer([random.randint(0, 1200), random.randint(0, 1200)], 200)
 
 # Update canvas
 def update_field(cell_list):
@@ -54,34 +55,22 @@ def update_field(cell_list):
         x_pos, y_pos = entity.position
 
         # Set color of cell based on species
-        if entity.attrib["species"] == "plant":
-            color = "green"
-        elif entity.attrib["species"] == "herbivore":
-            color = "blue"
-        else:
-            color = "red"
+        color = entity.color
 
         FIELD.create_oval(x_pos - size, y_pos - size, x_pos + size, y_pos + size, fill=color)
 
     CANVAS.update()
 
-
-while True:
+def update_list(entity_list):
+    """Update every entity in a list"""
+    for entity in entity_list:
+        entity.update()
+            
+def global_update():
     update_field(plant_list + consumer_list + spore_list)
-    for entity in plant_list:
-        entity.update()
-        if not entity.living or entity.position[0] > FIELD_SIZE or entity.position[1] > FIELD_SIZE or entity.position[0] < 0 or entity.position[1] < 0:  # If entity is dead or outside of bounds, remove it
-            for count in range(entity.index, len(plant_list)):  # If you remove a cell from the middle of the index, you need to tell the cells after the one you removed that their index has decreased by one
-                plant_list[count].index -= 1
-            plant_list.remove(entity)
 
-    for entity in consumer_list:
-        entity.update()
-        if not entity.living or entity.position[0] > FIELD_SIZE or entity.position[1] > FIELD_SIZE or entity.position[0] < 0 or entity.position[1] < 0:  # If entity is dead or outside of bounds, remove it
-            for count in range(entity.index, len(consumer_list)):  # If you remove a cell from the middle of the index, you need to tell the cells after the one you removed that their index has decreased by one
-                consumer_list[count].index -= 1
-            consumer_list.remove(entity)
-
-    for entity in spore_list:
-        entity.update()
-        # spores need no additional code
+    update_list(plant_list)
+    update_list(consumer_list)
+    update_list(spore_list)
+while True:
+    global_update()
