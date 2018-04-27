@@ -45,7 +45,8 @@ class Cell:
                          + math.pow(self.position[1] - other_position[1], 
                                     2))
     def die(self):
-        Cell.CELL_LIST.remove(self)
+        if self in Cell.CELL_LIST:
+            Cell.CELL_LIST.remove(self)
 
 class Plant(Cell):
     """Plant cell sub-type:
@@ -62,7 +63,8 @@ class Plant(Cell):
     def die(self):
         """Death is simply getting removed from all lists"""
         super().die()
-        Plant.CELL_LIST.remove(self)
+        if self in Plant.CELL_LIST:
+            Plant.CELL_LIST.remove(self)
 
     def update(self):
         """Update the position, mass, and actions of the cell"""
@@ -156,15 +158,8 @@ class Consumer(Cell):
             self.new_target()
             self.move(self.target_direction())
 
-        # Suffocation and consumption
-        for other in Consumer.CELL_LIST:
-            # loop through the list of other cells to check which will suffocate
-            if (self.dist(other.position) - (self.radius)) > other.radius / -10 \
-               and other.radius < self.radius:
-                # if this cell overlaps another cell of the same type significantly, this cell dies, as if by "suffocation"
-                self.die()
-
-        for other in Consumer.TARGET_LIST:
+        # consumption
+        for other in Plant.CELL_LIST:
             # loop through the list of other cells to check which can be consumed
             if self.dist(other.position) < (self.radius) \
                and other.radius < self.radius:
@@ -206,8 +201,8 @@ class Consumer(Cell):
 
     def split(self, angle):
         """Creates a new cell of the same type with a portion of the parent cell's mass"""
-        new_position = [(self.position[0] + (math.cos(math.radians(angle)) * (self.radius * 2))),
-                        (self.position[1] + (math.sin(math.radians(angle)) * (self.radius * 2)))]
+        new_position = [(self.position[0] + (math.cos(math.radians(angle)) * (self.radius * 4))),
+                        (self.position[1] + (math.sin(math.radians(angle)) * (self.radius * 4)))]
         Consumer(new_position,
                  self.mass / 3)
         self.mass /= 2
