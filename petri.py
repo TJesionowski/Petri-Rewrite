@@ -2,8 +2,9 @@ import tkinter
 import random
 from cell import Cell
 from cell import Plant
-from cell import Consumer
 from cell import Spore
+from cell import Consumer
+from cell import Predator
 
 # Global constants
 FIELD_SIZE = 1000
@@ -19,16 +20,16 @@ FIELD.pack()
 
 # Instantiate list of cells
 plant_list = []
-consumer_list = []
 spore_list = []
-Cell.FIELD_SIZE = FIELD_SIZE
+consumer_list = []
+predator_list = []
 Plant.CELL_LIST = plant_list
-Consumer.CELL_LIST = consumer_list
-Consumer.TARGET_LIST = plant_list
 Spore.CELL_LIST = spore_list
+Consumer.CELL_LIST = consumer_list
+Predator.CELL_LIST = predator_list
 
 # Example cases for testing
-Plant([200, 200], 80)
+Plant([FIELD_SIZE / 2, FIELD_SIZE / 2], 80)
 
 Plant([random.randint(0, FIELD_SIZE), random.randint(0, FIELD_SIZE)], 80)
 Plant([random.randint(0, FIELD_SIZE), random.randint(0, FIELD_SIZE)], 80)
@@ -37,6 +38,8 @@ Plant([random.randint(0, FIELD_SIZE), random.randint(0, FIELD_SIZE)], 80)
 
 Consumer([random.randint(0, FIELD_SIZE), random.randint(0, FIELD_SIZE)], 200)
 Consumer([random.randint(0, FIELD_SIZE), random.randint(0, FIELD_SIZE)], 200)
+
+Predator([1000, 1000], 400)
 
 
 # Update canvas
@@ -71,11 +74,12 @@ def update_list(entity_list):
 
 
 def global_update():
-    update_field(plant_list + consumer_list + spore_list)
+    update_field(plant_list + consumer_list + spore_list + predator_list)
 
     update_list(plant_list)
     update_list(consumer_list)
     update_list(spore_list)
+    update_list(predator_list)
 
 
 # Update until simulation is killed

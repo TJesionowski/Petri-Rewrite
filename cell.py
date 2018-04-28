@@ -7,8 +7,8 @@ class Cell:
     CELL_LIST = []
     FIELD_SIZE = 1000
 
-    def __init__(self, position, mass, color="red", split_mass=200):
-        self.metabolism = 100 / split_mass
+    def __init__(self, position, mass, color="brown", split_mass=200):
+        self.metabolism = 50 / split_mass
         self.position = position  # X and Y coordinates of cell as list of [x, y]
         self.mass = mass
         self.radius = math.sqrt(self.mass / math.pi) * 5  # Set radius for use in rendering and interacting with other cells and world
@@ -64,6 +64,11 @@ class Plant(Cell):
 
     def die(self):
         """Death is simply getting removed from all lists"""
+        # 1 in 10 chance to spawn a spore
+        if random.randint(1, 10) == 1:
+            Spore(self.position,
+                  self.mass / 3,
+                  "Plant")
         super().die()
         if self in Plant.CELL_LIST:
             Plant.CELL_LIST.remove(self)
@@ -82,7 +87,7 @@ class Plant(Cell):
 
         for other in Plant.CELL_LIST:
             # loop through the list of other cells to check which will suffocate
-            if (self.dist(other.position) - (self.radius)) < other.radius / -10  \
+            if (self.dist(other.position) - (self.radius)) < 0  \
                and other.radius > self.radius:
                 # if this cell overlaps another cell of the same type significantly, that cell dies, as if by "suffocation"
                 self.die()
@@ -98,21 +103,16 @@ class Plant(Cell):
         """Creates a new cell of the same type with a portion of the parent cell's mass"""
 
         # new cell spawns 4 cell radii away form the parent cell
-        new_position = [(self.position[0] + (math.cos(math.radians(angle)) * (self.radius * 2))),
-                        (self.position[1] + (math.sin(math.radians(angle)) * (self.radius * 2)))]
+        new_position = [(self.position[0] + (math.cos(math.radians(angle)) * (self.radius * 4))),
+                        (self.position[1] + (math.sin(math.radians(angle)) * (self.radius * 4)))]
 
-        # 1 in 10 chance to spawn a spore
-        if random.randint(1, 10) != 1:
-            # child cells have a third of their parent cells mass
-            Plant(new_position,
-                  self.mass / 3)
-        else:
-            Spore(new_position,
-                  self.mass / 3,
-                  "Plant")
+        # child cells have a third of their parent cells mass
+        Plant(new_position,
+              self.mass / 3)
 
         # cells lose half their mass when splitting
         self.mass /= 2
+        self.check_bounds()
 
     def calc_light(self):
         # Calculate the amount of light reaching cell; by default the light loses 50% of its strength per 100 pixels
@@ -120,94 +120,7 @@ class Plant(Cell):
         distance = self.dist([Cell.FIELD_SIZE / 2,
                               Cell.FIELD_SIZE / 2])
         # Light energy falls off with distance
-        return 1 / (1 + distance / 200)
-
-
-class Consumer(Cell):
-    """Consumer cell subclass:
-        Capable of consuming other cells; moves to nearest desirable target
-        Other cell is consumed if its central point is overlapped"""
-
-    CELL_LIST = []  # List of cells of this type
-    TARGET_LIST = []  # List of cells available to consume
-
-    def __init__(self, position, mass):
-        # Consumers are blue and have a split mass of 300
-
-        Consumer.CELL_LIST.append(self)
-        super().__init__(position, mass, "blue", 300)
-        self.target_cell = self
-        self.new_target()
-
-    def die(self):
-        """Death is simply getting removed from all lists"""
-        super().die()
-        Consumer.CELL_LIST.remove(self)
-
-    def update(self):
-        """Update the position, mass, and actions of the cell"""
-
-        # Cells lose 0.25% of their mass per tick
-        self.mass -= self.mass * 0.003 * self.metabolism
-
-        # Non-plant cells have greater radii per mass
-        self.radius = math.sqrt(self.mass / math.pi) * 3
-
-        # If current target is alive, track it, otherwise find new target to track
-        if self.target_cell in Plant.CELL_LIST:
-            # Make sure that the target from the previous cycle is still alive, and if not find new target
-            self.move(self.target_direction())
-        else:
-            self.new_target()
-            self.move(self.target_direction())
-
-        # consumption
-        for other in Plant.CELL_LIST:
-            # loop through the list of other cells to check which can be consumed
-            if self.dist(other.position) < (self.radius) \
-               and other.radius < self.radius:
-                # if this cell is touching the center of another consumable cell, that cell gets eaten
-                self.mass += other.mass
-                other.die()
-
-        if self.mass < self.split_mass / 5:  # Check if cell should still be alive
-            self.die()
-        elif self.mass > self.split_mass:  # Check if cell should split
-            self.split(self.target_direction())
-
-    def new_target(self):
-        """Find new cell to chase and attempt to consume"""
-
-        distance_to_target = Cell.FIELD_SIZE * Cell.FIELD_SIZE
-        for cell in Plant.CELL_LIST:  # Search for most desirable target, and save it's index and id
-            if cell.mass < self.mass \
-               and self.dist(cell.position) < distance_to_target:
-                self.target_cell = cell
-                distance_to_target = self.dist(self.target_cell.position)
-
-    def target_direction(self):  # Chooses target based on species of cell
-        """ Movement, for cells which are capable of it, uses the following decision procedure:
-                Cells check the general attractiveness of areas of the field, with a higher concentration of food making it appear better, and a higher concentration of predators making it appear worse
-                Once it is within what appears to be a good area, it will "see" a target that it should move toward to consume, only ceasing its pursuit if the target is first reached by another cell or a predator nears it and makes it attempt to flee """
-        direction = math.atan2(
-            (self.target_cell.position[1] - self.position[1]),  # Theta = atan2(y, x)
-            (self.target_cell.position[0] - self.position[0]))  # Broken into multiplle lines for clarity
-        return direction
-
-    def move(self, angle=0):
-        """Moves the cell, takes an angle in radians. """
-        speed = 10 / math.log(self.mass) * self.metabolism
-        self.position = [self.position[0] + (math.cos(angle) * speed),
-                         self.position[1] + (math.sin(angle) * speed)]  # Once direction of movement is decided, moves cell in that direction, with speed dependent on metabolic rate and mass
-        self.check_bounds()
-
-    def split(self, angle):
-        """Creates a new cell of the same type with a portion of the parent cell's mass"""
-        new_position = [(self.position[0] + (math.cos(math.radians(angle)) * (self.radius * 2))),
-                        (self.position[1] + (math.sin(math.radians(angle)) * (self.radius * 2)))]
-        Consumer(new_position,
-                 self.mass / 3)
-        self.mass /= 3
+        return 1 / (1 + distance / 180)
 
 
 class Spore(Cell):
@@ -223,7 +136,12 @@ class Spore(Cell):
         self.incubation_timer = random.randint(100, 2000)
         self.radius = math.sqrt(self.mass / math.pi)
         self.species = species
-        self.color = "brown"
+        if self.species == "Plant":
+            self.color = "green"
+        elif self.species == "Consumer":
+            self.color = "blue"
+        elif self.species == "Predator":
+            self.color = "red"
 
     def die(self):
         super().die()
@@ -241,4 +159,208 @@ class Spore(Cell):
         elif self.species == "Consumer":
             Consumer(self.position,
                      self.mass)
+        elif self.species == "Predator":
+            Predator(self.position,
+                     self.mass)
         self.die()
+
+
+class Consumer(Cell):
+    """Consumer cell subclass:
+        Capable of consuming other cells; moves to nearest desirable target
+        Other cell is consumed if its central point is overlapped"""
+
+    CELL_LIST = []  # List of cells of this type
+
+    def __init__(self, position, mass):
+        # Consumers are blue and have a split mass of 400
+
+        Consumer.CELL_LIST.append(self)
+        super().__init__(position, mass, "blue", 400)
+        self.target_cell = self
+        self.new_target()
+
+    def die(self):
+        """Death is simply getting removed from all lists"""
+        # 1 in 10 chance to spawn a spore
+        if random.randint(1, 6) == 1:
+            Spore(self.position,
+                  self.mass / 3,
+                  "Consumer")
+        Consumer.CELL_LIST.remove(self)
+        super().die()
+
+    def update(self):
+        """Update the position, mass, and actions of the cell"""
+
+        # Cells lose 0.0025% of their mass per tick
+        self.mass -= self.mass * 0.0035 * self.metabolism
+
+        # Non-plant cells have greater radii per mass
+        self.radius = math.sqrt(self.mass / math.pi) * 3
+
+        # Check whether any predators are nearby, if so, set self.hunter to the cell so that evasive action may be taken
+        self.hunter = self.check_predators()
+
+        # If current target is alive, track it, otherwise find new target to track
+        if self.target_cell in Plant.CELL_LIST:  # Make sure that the target from the previous cycle is still alive, and if not find new target
+            if self.hunter != -1:
+                self.move(-self.target_direction(self.hunter))
+            self.move(self.target_direction(self.target_cell))
+        else:
+            self.new_target()
+            if self.hunter != -1:
+                self.move(-self.target_direction(self.hunter))
+            self.move(self.target_direction(self.target_cell))
+
+        # consumption
+        for other in Plant.CELL_LIST:
+            # loop through the list of other cells to check which can be consumed
+            if self.dist(other.position) < (self.radius) and other.radius < self.radius:
+                # if this cell is touching the center of another consumable cell, that cell gets eaten
+                self.mass += other.mass
+                other.die()
+
+        # for other in Consumer.CELL_LIST:
+        #     # loop through the list of other cells to check which will suffocate
+        #     if (self.dist(other.position) - (self.radius)) < other.radius / -10  and other.radius > self.radius:
+        #         # if this cell overlaps another cell of the same type significantly, that cell dies, as if by "suffocation"
+        #         self.die()
+
+        if self.mass < self.split_mass / 5:  # Check if cell should still be alive
+            self.die()
+        elif self.mass > self.split_mass:  # Check if cell should split
+            self.new_target()
+            self.split(self.target_direction(self.target_cell))
+
+    def new_target(self):
+        """Find new cell to chase and attempt to consume"""
+
+        distance_to_target = Cell.FIELD_SIZE * Cell.FIELD_SIZE
+        for cell in Plant.CELL_LIST:  # Search for most desirable target, and save it's index and id
+            if cell.mass < self.mass \
+               and self.dist(cell.position) < distance_to_target:
+                self.target_cell = cell
+                distance_to_target = self.dist(self.target_cell.position)
+
+    def target_direction(self, target_cell):  # Chooses target based on species of cell
+        """ Movement, for cells which are capable of it, uses the following decision procedure:
+                Cells check the general attractiveness of areas of the field, with a higher concentration of food making it appear better, and a higher concentration of predators making it appear worse
+                Once it is within what appears to be a good area, it will "see" a target that it should move toward to consume, only ceasing its pursuit if the target is first reached by another cell or a predator nears it and makes it attempt to flee """
+        direction = math.atan2(
+            (target_cell.position[1] - self.position[1]),  # Theta = atan2(y, x)
+            (target_cell.position[0] - self.position[0]))  # Broken into multiplle lines for clarity
+        return direction
+
+    def check_predators(self):
+        """Check whether any predators have entered the cell's immediate vicinity"""
+        for other in Predator.CELL_LIST:
+            if self.dist(other.position) < self.radius * 5:
+                return other
+
+        return -1
+
+    def move(self, angle=0):
+        """Moves the cell, takes an angle in radians. """
+        speed = 25 / math.log(self.mass) * self.metabolism
+        self.position = [self.position[0] + (math.cos(angle) * speed),
+                         self.position[1] + (math.sin(angle) * speed)]  # Once direction of movement is decided, moves cell in that direction, with speed dependent on metabolic rate and mass
+        self.check_bounds()
+
+    def split(self, angle):
+        """Creates a new cell of the same type with a portion of the parent cell's mass"""
+        new_position = [(self.position[0] + (math.cos(math.radians(angle)) * (self.radius * 2))),
+                        (self.position[1] + (math.sin(math.radians(angle)) * (self.radius * 2)))]
+        Consumer(new_position,
+                 self.mass / 3)
+        self.mass /= 3
+        self.check_bounds()
+
+
+class Predator(Cell):
+    """Predator cell subclass:
+    Hunts herbivorous cells as well as others of their kind"""
+
+    CELL_LIST = []  # List of cells of this type
+
+    def __init__(self, position, mass):
+        # Predators are red and have a split mass of 500
+
+        Predator.CELL_LIST.append(self)
+        super().__init__(position, mass, "red", 600)
+        self.metabolism = 100 / self.split_mass
+        self.target_cell = self
+        self.new_target()
+
+    def die(self):
+        """Death is simply getting removed from all lists"""
+        # 1 in 10 chance to spawn a spore
+        Spore(self.position,
+              self.mass / 3,
+              "Predator")
+        Predator.CELL_LIST.remove(self)
+        super().die()
+
+    def update(self):
+        """Update the position, mass, and actions of the cell"""
+
+        # Cells lose 0.0025% of their mass per tick
+        self.mass -= self.mass * 0.003 * self.metabolism
+
+        # Non-plant cells have greater radii per mass
+        self.radius = math.sqrt(self.mass / math.pi) * 4
+
+        # If current target is alive, track it, otherwise find new target to track
+        if self.target_cell in Consumer.CELL_LIST:
+            # Make sure that the target from the previous cycle is still alive, and if not find new target
+            self.move(self.target_direction())
+        else:
+            self.new_target()
+            self.move(self.target_direction())
+
+        # consumption
+        for other in Consumer.CELL_LIST + Predator.CELL_LIST:
+            # loop through the list of other cells to check which can be consumed
+            if self.dist(other.position) < (self.radius) and other.radius < self.radius:
+                # if this cell is touching the center of another consumable cell, that cell gets eaten
+                self.mass += other.mass
+                other.die()
+
+        if self.mass < self.split_mass / 6:  # Check if cell should still be alive
+            self.die()
+        elif self.mass > self.split_mass:  # Check if cell should split
+            self.new_target()
+            self.split(self.target_direction())
+
+    def new_target(self):
+        """Find new cell to chase and attempt to consume"""
+
+        distance_to_target = Cell.FIELD_SIZE * Cell.FIELD_SIZE
+        for cell in Consumer.CELL_LIST:  # Search for most desirable target, and save it's index and id
+            if cell.mass < self.mass * 2 \
+               and self.dist(cell.position) < distance_to_target:
+                self.target_cell = cell
+                distance_to_target = self.dist(self.target_cell.position)
+
+    def target_direction(self):  # Chooses target based on species of cell
+        """Track this cell's quarry"""
+        direction = math.atan2(
+            (self.target_cell.position[1] - self.position[1]),  # Theta = atan2(y, x)
+            (self.target_cell.position[0] - self.position[0]))  # Broken into multiplle lines for clarity
+        return direction
+
+    def move(self, angle=0):
+        """Moves the cell, takes an angle in radians. """
+        speed = 15 / math.log(self.mass) * self.metabolism
+        self.position = [self.position[0] + (math.cos(angle) * speed),
+                         self.position[1] + (math.sin(angle) * speed)]  # Once direction of movement is decided, moves cell in that direction, with speed dependent on metabolic rate and mass
+        self.check_bounds()
+
+    def split(self, angle):
+        """Creates a new cell of the same type with a portion of the parent cell's mass"""
+        new_position = [(self.position[0] + (math.cos(math.radians(angle)) * (self.radius * 2))),
+                        (self.position[1] + (math.sin(math.radians(angle)) * (self.radius * 2)))]
+        Predator(new_position,
+                 self.mass / 3)
+        self.mass /= 3
+        self.check_bounds()
